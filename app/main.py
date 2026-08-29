@@ -5,12 +5,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.routers import auth, drivers, rides, wallet
 from app.realtime.socket import sio
+from app.realtime.keepalive import start_keepalive
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # PostGIS + tables are managed by Alembic migrations in production.
+    task = start_keepalive(settings.SELF_PING_URL, settings.SELF_PING_INTERVAL_SEC)
     yield
+    if task:
+        task.cancel()
 
 
 app = FastAPI(

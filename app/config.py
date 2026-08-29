@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     ENV: str = "development"
     CORS_ORIGINS: str = "*"
 
+    # Keep-alive: self-ping this URL to stop Render free tier from sleeping.
+    SELF_PING_URL: str = ""
+    SELF_PING_INTERVAL_SEC: int = 300  # 5 min
+
     @property
     def cors_list(self) -> list[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",")]

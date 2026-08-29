@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: asperride-backend
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false          # set in Render dashboard (Supabase pooler URL)
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "10080"
+      - key: ENV
+        value: staging
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: SELF_PING_URL
+        sync: false          # e.g. https://asperride-backend.onrender.com/health
