@@ -34,10 +34,12 @@ class Settings(BaseSettings):
     def _normalize_db_url(cls, v):
         # asyncpg driver ensure + pgbouncer flag (Supabase pooler) hata do
         if isinstance(v, str) and v:
+            if v.startswith("postgresql+asyncpg://"):
+                v = v.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
             if v.startswith("postgresql://"):
-                v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+                v = v.replace("postgresql://", "postgresql+psycopg://", 1)
             if v.startswith("postgres://"):
-                v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+                v = v.replace("postgres://", "postgresql+psycopg://", 1)
             v = v.replace("?pgbouncer=true", "").replace("&pgbouncer=true", "")
         return v
 
