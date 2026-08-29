@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,9 +15,31 @@ class Settings(BaseSettings):
     ENV: str = "development"
     CORS_ORIGINS: str = "*"
 
-    # Keep-alive: self-ping this URL to stop Render free tier from sleeping.
+    # Keep-alive (Render only): self-ping URL to prevent free-tier sleep.
     SELF_PING_URL: str = ""
     SELF_PING_INTERVAL_SEC: int = 300  # 5 min
+
+    # Empty-string env vars (common on hosting dashboards) -> use defaults
+    @field_validator(
+        "ACCESS_TOKEN_EXPIRE_MINUTES", "SELF_PING_INTERVAL_SEC", mode="before"
+    )
+    @classmethod
+    def _blank_int_to_default(cls, v, info):
+        if v is None or (isinstance(v, str) and v.strip() == ""):
+            return cls.model_fields[info.field_name].default
+        return v
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def _normalize_db_url(cls, v):
+        # asyncpg driver ensure + pgbouncer flag (Supabase pooler) hata do
+        if isinstance(v, str) and v:
+            if v.startswith("postgresql://"):
+                v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+            if v.startswith("postgres://"):
+                v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+            v = v.replace("?pgbouncer=true", "").replace("&pgbouncer=true", "")
+        return v
 
     @property
     def cors_list(self) -> list[str]:
