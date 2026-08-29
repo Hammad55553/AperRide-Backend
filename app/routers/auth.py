@@ -57,3 +57,16 @@ async def otp_verify(body: OtpVerify, db: AsyncSession = Depends(get_db)):
         await db.refresh(user)
     token = create_access_token(str(user.id))
     return TokenResponse(access_token=token, user=UserOut.model_validate(user))
+
+
+@router.get("/debug/db")
+async def debug_db(db: AsyncSession = Depends(get_db)):
+    """TEMP: real DB error text dekhne ke liye. Baad me hata denge."""
+    from sqlalchemy import text
+    try:
+        r = await db.execute(text("select 1"))
+        return {"db": "ok", "result": r.scalar()}
+    except Exception as e:
+        import traceback
+        return {"db": "FAIL", "error_type": type(e).__name__,
+                "error": str(e), "trace": traceback.format_exc()[-1500:]}
