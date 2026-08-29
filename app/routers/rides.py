@@ -59,6 +59,22 @@ async def create_ride(body: RideCreate, user: User = Depends(get_current_user),
     return RideOut.model_validate(ride)
 
 
+@router.get("/mine/list", response_model=list[RideOut])
+async def my_rides(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    rows = await db.scalars(
+        select(Ride).where(Ride.rider_id == user.id).order_by(Ride.created_at.desc())
+    )
+    return [RideOut.model_validate(r) for r in rows]
+
+
+@router.get("/driver/list", response_model=list[RideOut])
+async def driver_rides(driver: Driver = Depends(get_current_driver), db: AsyncSession = Depends(get_db)):
+    rows = await db.scalars(
+        select(Ride).where(Ride.driver_id == driver.id).order_by(Ride.created_at.desc())
+    )
+    return [RideOut.model_validate(r) for r in rows]
+
+
 @router.get("/{ride_id}", response_model=RideOut)
 async def get_ride(ride_id: str, db: AsyncSession = Depends(get_db)):
     ride = await db.get(Ride, ride_id)
